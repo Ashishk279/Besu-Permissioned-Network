@@ -1,0 +1,91 @@
+mkdir -p node1/data
+mkdir -p node2/data
+mkdir -p node3/data
+mkdir -p node4/data
+
+---------create a ibftConfigFile.jsonfile 
+besu operator generate-blockchain-config --config-file=ibftConfigFile.json --to=networkFiles --private-key-file-name=key
+
+------------ Copy the node private keys to the node directories
+
+------------Create the permissions configuration file
+Copy the following permissions configuration to a file called permissions_config.toml and save a copy in the Node-1/data, Node-2/data, Node-3/data, and Node-4/data directories
+
+cp permissions_config.toml node1/data
+cp permissions_config.toml node2/data
+cp permissions_config.toml node3/data
+cp permissions_config.toml node4/data
+
+cd node1
+besu --data-path=data --genesis-file=..\genesis.json --permissions-nodes-config-file-enabled --permissions-accounts-config-file-enabled --rpc-http-enabled --rpc-http-api=ADMIN,ETH,NET,PERM,IBFT --host-allowlist=* --rpc-http-cors-origins=*
+
+cd node2
+besu --data-path=data --genesis-file=..\genesis.json --permissions-nodes-config-file-enabled --permissions-accounts-config-file-enabled --rpc-http-enabled --rpc-http-api=ADMIN,ETH,NET,PERM,IBFT --host-allowlist=* --rpc-http-cors-origins=* --p2p-port=30304 --rpc-http-port=8546
+
+
+cd node3
+besu --data-path=data --genesis-file=..\genesis.json --permissions-nodes-config-file-enabled --permissions-accounts-config-file-enabled --rpc-http-enabled --rpc-http-api=ADMIN,ETH,NET,PERM,IBFT --host-allowlist=* --rpc-http-cors-origins=* --p2p-port=30305 --rpc-http-port=8547
+
+cd node4
+besu --data-path=data --genesis-file=..\genesis.json --permissions-nodes-config-file-enabled --permissions-accounts-config-file-enabled --rpc-http-enabled --rpc-http-api=ADMIN,ETH,NET,PERM,IBFT --host-allowlist=* --rpc-http-cors-origins=* --p2p-port=30306 --rpc-http-port=8548
+
+
+--------conform permission network in working ------------
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"net_peerCount\",\"params\":[],\"id\":1}" http://127.0.0.1:8545
+
+
+------------Add node as a peer ----------------------------
+
+Node1 -> Node2, Node3, Node4
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"admin_addPeer\",\"params\":[\"enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303\"],\"id\":1}" http://127.0.0.1:8546
+
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"admin_addPeer\",\"params\":[\"enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303\"],\"id\":1}" http://127.0.0.1:8547
+
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"admin_addPeer\",\"params\":[\"enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303\"],\"id\":1}" http://127.0.0.1:8548
+
+Node2 -> Node3, Node4
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"admin_addPeer\",\"params\":[\"enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304\"],\"id\":1}" http://127.0.0.1:8547
+
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"admin_addPeer\",\"params\":[\"enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304\"],\"id\":1}" http://127.0.0.1:8548
+
+Node3 -> Node4
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"admin_addPeer\",\"params\":[\"enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305\"],\"id\":1}" http://127.0.0.1:8548
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+node1 
+Enode URL enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303
+
+
+node2
+Enode URL enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304
+
+
+node3
+Enode URL enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305
+
+node4
+Enode URL enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306
+
+
+
+curl -X POST --data '{"jsonrpc":"2.0","method":"perm_addNodesToAllowlist","params":["enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303","enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304","enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305","enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306"],"id":1}' http://127.0.0.1:8545
+
+curl -X POST --data '{"jsonrpc":"2.0","method":"perm_addNodesToAllowlist","params":["enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303","enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304","enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305","enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306"],"id":1}' http://127.0.0.1:8546
+
+curl -X POST --data '{"jsonrpc":"2.0","method":"perm_addNodesToAllowlist","params":[["enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303","enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304","enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305","enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306"]],"id":1}' http://127.0.0.1:8547
+
+curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"perm_addNodesToAllowlist","params":[["enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303","enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304","enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305","enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306"]],"id":1}' http://127.0.0.1:8548
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-----Command for window Power shell --------
+
+curl -X POST --data "{\"jsonrpc\":\"2.0\",\"method\":\"perm_addNodesToAllowlist\",\"params\":[[\"enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303\",\"enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304\",\"enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305\",\"enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306\"]],\"id\":1}" http://127.0.0.1:8545
+
+curl -X POST -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"perm_addNodesToAllowlist\",\"params\":[[\"enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303\",\"enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304\",\"enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305\",\"enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306\"]],\"id\":1}" http://127.0.0.1:8546
+
+
+curl -X POST -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"perm_addNodesToAllowlist\",\"params\":[[\"enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303\",\"enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304\",\"enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305\",\"enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306\"]],\"id\":1}" http://127.0.0.1:8547
+
+
+curl -X POST -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"perm_addNodesToAllowlist\",\"params\":[[\"enode://b8826d070063ae6b403dbe38df52d238cfa21deadb0dcb5f43e5de2bdb49cec13ec4f0416e4bbb15e3d01f77a36478e39999b2197927704c09d22b4b0b9a31a2@127.0.0.1:30303\",\"enode://e48c08e9ce728b5fde7f05a2db6bf21e293ebac258165813e570ba618b556aad8675076e0358d3d70dcdc90304383d5780af084d09c28d47282303fabff3fe34@127.0.0.1:30304\",\"enode://33c49abddabf3b9f0c8706d1fad504d28a6376230a3c9f6187d1d70bcd52d5580f19dbb34101bbf9641b53feccac968d052dd04543b91c2b56b0a5ff3ad4d1aa@127.0.0.1:30305\",\"enode://81dcf64317549025a4cc25538c5ccc88d33697b83d441e79f048a5da478576b2a98ac051e4978f6d9369b9c61f7483f4b5349fe463fc02a776ca9f59e61bd742@127.0.0.1:30306\"]],\"id\":1}" http://127.0.0.1:8548
